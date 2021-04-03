@@ -1,0 +1,206 @@
+<aura:component implements="flexipage:availableForAllPageTypes,force:hasRecordId,force:lightningQuickAction,flexipage:availableForRecordHome" access="global" controller="V2_DocusignController">
+  <!-- below statement will allow us to put line breaks in toast message -->
+  <aura:html tag="style"
+    >.toastMessage.forceActionsText{white-space : pre-line !important;}</aura:html
+  >
+  <aura:attribute name="activeSections" type="List" default="['A']" />
+  <aura:attribute name="integrationTaskDocuSign" type="Integration_Task__c" default="" />
+  <aura:attribute name="selectedUser" type="User" />
+  <aura:attribute name="CaseID" type="Id" />
+  <aura:attribute name="TaskID" type="Id" />
+  <aura:attribute name="selectedContactId" type="Id" />
+  <aura:attribute name="selectedContactEmail" type="String" />
+  <aura:attribute name="recipientFullName" type="String" />
+  <aura:attribute name="contactRecordTypes" type="RecordType" default="" />
+  <aura:attribute name="recordHomeMode" type="Boolean" default="false" />
+  <aura:attribute name="spitError" type="Boolean" default="false" />
+  <aura:attribute name="inCreateMode" type="Boolean" default="true" />
+  <aura:attribute name="inEditMode" type="Boolean" default="false" />
+  <aura:attribute name="showSpinner" type="Boolean" default="false" />
+  <aura:attribute name="showDocumentIframe" type="Boolean" default="true" />
+  <aura:attribute name="sdFile" type="string" />
+  <aura:attribute name="_caseDetail" type="sObject" />
+
+  <!-- <aura:attribute name="selectedContentURL" type="String" /> -->
+  <aura:attribute name="contentViewerData" type="CDocuSignRelatedContent__c[]" />
+  <aura:attribute name="contentViewerColumns" type="List" />
+
+  <aura:attribute name="taskObject" type="Task" default="{}" />
+
+  <aura:attribute name="pollId" type="string" />
+  <aura:attribute name="accumulatedPollTime" type="Integer" default="0" />
+  <aura:attribute name="externalConfigs" type="External_Configurations__c[]" />
+
+  <!-- <aura:attribute name="envelope" type="CDocuSign_Envelope__c" default="{}" /> -->
+  <aura:attribute name="envelopeTabs" type="CDocuSign_Envelope_Tab__c[]" />
+  <aura:attribute name="artifact" type="CDocuSign_Envelope_Artifact__c" />
+  <aura:attribute name="recipients" type="CDocuSign_Envelope_Recipient__c[]" />
+  <aura:attribute name="contacts" type="Contact[]" />
+  <aura:attribute name="templateName" type="String" />
+
+  <aura:handler name="init" value="{!this}" action="{!c.doInit}" />
+  <aura:attribute name="pleaseWaitText" type="String" default="" />
+
+  <aura:registerEvent name="overlayEvent" type="c:evtDocuSignAction" />
+
+  <lightning:navigation aura:id="navService" />
+  <lightning:overlayLibrary aura:id="overlayLib" />
+  <aura:attribute name="iframePageRef" type="String" />
+  <aura:attribute name="documentPageRef" type="String" />
+  <aura:attribute name="bodyRecipients" type="Aura.Component[]" />
+  <aura:attribute name="bodyTabs" type="Aura.Component[]" />
+
+  <iframe id="myiFrame" src="{!v.iframePageRef}" style="display: none;" />
+
+  <lightning:messages />
+
+  <aura:if isTrue="{!v.showSpinner}">
+    <div aura:id="spinnerId" class="slds-spinner_container">
+      <div class="slds-spinner--brand slds-spinner slds-spinner--large slds-is-relative" role="alert">
+        <span class="slds-assistive-text">Loading</span>
+        <div class="slds-spinner__dot-a"></div>
+        <div class="slds-spinner__dot-b"></div>
+        <p style="transform: translate(-32%, -50%) rotate(-90deg); width: 320px; text-align: center; padding-top: 20px; font-weight: bold;">{!v.pleaseWaitText}</p>
+      </div>
+    </div>
+  </aura:if>
+
+  <div class="slds-is-relative" style="background-color: white;">
+    <div aura:id="divWrapper">
+      <lightning:layout multipleRows="false">
+        <lightning:layoutItem flexibility="fixed" size="4">
+          <div class="x-accordian-heading">
+            <lightning:accordion allowMultipleSectionsOpen="true" aura:id="accordian" activeSectionName="{!v.activeSections}" onsectiontoggle="{! c.handleSectionToggle }">
+              <lightning:accordionSection name="EnvelopeSummary" label="Envelope Summary">
+                <aura:set attribute="body">
+                  <lightning:layout multipleRows="true">
+                    <lightning:layoutItem padding="vertical-small" flexibility="fixed" size="12">
+                      <lightning:formattedText value="Template: " style="font-size: smaller; font-weight: bold;" />
+                      <lightning:formattedText value="{!v.templateName}" style="font-size: smaller; font-weight: bold; color: blue;" />
+                    </lightning:layoutItem>
+
+                    <lightning:layoutItem padding="vertical-small" flexibility="fixed" size="12">
+                      <lightning:formattedText value="Status: " style="font-size: smaller; font-weight: bold;" />
+                      <lightning:formattedText value="{!v.taskObject.CDocuSign_Envelope__r.Envelope_Status__c}" style="font-size: smaller; font-weight: bold; color: blue;" />
+                    </lightning:layoutItem>
+                  </lightning:layout>
+                </aura:set>
+              </lightning:accordionSection>
+              <!-- <lightning:accordionSection name="Content Viewer" label="Reference Content">
+                <aura:set attribute="body">
+                  <lightning:layout multipleRows="true">
+                    <lightning:layoutItem padding="vertical-small" flexibility="fixed" size="12" class="slds-p-bottom_small">
+                      <div class="slds-scrollable" style="max-height: 230px;font-size: smaller;width: -webkit-fill-available;">
+                        <lightning:datatable keyField="id" data="{!v.contentViewerData}" columns="{!v.contentViewerColumns}" hideCheckboxColumn="true" resizeColumnDisabled="false" onrowaction="{! c.handleContenViewerRowAction }" hideTableHeader="true" />
+                      </div>
+                    </lightning:layoutItem>
+                  </lightning:layout>
+                </aura:set>
+              </lightning:accordionSection> -->
+              <lightning:accordionSection name="EnvelopeRecipients" label="Envelope Receipients">
+                <aura:set attribute="body">
+                  <lightning:layout multipleRows="true">
+                    <div class="recipientContainer">
+                      <div>
+                        <lightning:layoutItem padding="vertical-small" flexibility="fixed" size="12">
+                          {!v.bodyRecipients}
+                        </lightning:layoutItem>
+                      </div>
+                    </div>
+                  </lightning:layout>
+                </aura:set>
+              </lightning:accordionSection>
+              <lightning:accordionSection name="EnvelopeTabs" label="Envelope Fields">
+                <aura:set attribute="body">
+                  <lightning:layout multipleRows="true">
+                    <lightning:layoutItem flexibility="fixed" size="12">
+                      <lightning:input aura:id="filterByRequired" type="checkbox" label="Filter on Required for Send" onchange="{!c.handleFilter}" checked="false" />
+                    </lightning:layoutItem>
+                    <lightning:layoutItem flexibility="fixed" size="12">
+                      <lightning:input aura:id="filterByPreloaded" type="checkbox" label="Filter on Preloaded" onchange="{!c.handleFilter}" checked="false" />
+                    </lightning:layoutItem>
+
+                    <lightning:layoutItem flexibility="fixed" size="12">
+                      <div class="tabContainer">
+                        <div>
+                          <!-- <lightning:layoutItem padding="vertical-small" flexibility="fixed" size="12"> -->
+                          {!v.bodyTabs}
+                          <!-- </lightning:layoutItem> -->
+                        </div>
+                      </div>
+                    </lightning:layoutItem>
+                  </lightning:layout>
+                </aura:set>
+              </lightning:accordionSection>
+            </lightning:accordion>
+          </div>
+        </lightning:layoutItem>
+        <lightning:layoutItem flexibility="fixed" size="8">
+          <lightning:layout multipleRows="true">
+            <aura:if isTrue="{!empty(v.sdFile)}">
+              <lightning:layoutItem padding="vertical-small" flexibility="fixed" size="12">
+                <div style="padding-left: 2px; padding-right: 0px;">
+                  <lightning:combobox name="contentViewerSelection" variant="label-hidden" aura:id="contentViewerSelection" value="{!v.documentPageRef}" options="{!v.contentViewerData}" onchange="{!c.onChangeContentViewer}" />
+                </div>
+              </lightning:layoutItem>
+            </aura:if>
+            <lightning:layoutItem flexibility="fixed" size="12">
+              <aura:if isTrue="{!v.showDocumentIframe}">
+                <iframe id="docuIframe" src="{!v.documentPageRef}" style="width: -webkit-fill-available; height: 570px;" />
+              </aura:if>
+            </lightning:layoutItem>
+            <lightning:layoutItem size="12" flexibility="fixed">
+              <aura:if isTrue="{!v.spitError==true}">
+                <div style="display: flex; flex-direction: row-reverse;">
+                  <lightning:button class="hollowbuttonDS" label="Close" onclick="{!c.handleCloseDraftAndTaskWindows}" />
+                </div>
+                <aura:set attribute="else">
+                  <aura:if isTrue="{!not(empty(v.sdFile))}">
+                    <div style="float: left; padding-top: 8px; padding-right: 10px; padding-left: 0.5em; width: fit-content;">
+                      <aura:if isTrue="{!v.taskObject.CDocuSign_Envelope__r.Envelope_Status__c == 'Not Created'}">
+                        <lightning:button class="solidbuttonDS" label="Create Draft" onclick="{!c.handleDocuSignCreateDraft}" />
+                      </aura:if>
+                    </div>
+                    <div style="float: right; padding-top: 8px;">
+                      <aura:if isTrue="{! or (v.taskObject.CDocuSign_Envelope__r.Envelope_Status__c == 'Created',v.taskObject.CDocuSign_Envelope__r.Envelope_Status__c == 'Not Created')}">
+                        <lightning:button class="hollowbuttonDS" label="Cancel" onclick="{!c.handleDocuSignDiscardDraft}" />
+                        <aura:set attribute="else">
+                          <div style="float: right; padding-top: 8px;">
+                            <lightning:button class="hollowbuttonDS" label="Reload Doc" onclick="{!c.handleReload}" />
+                            <lightning:button class="hollowbuttonDS" label="Close View" onclick="{!c.handleReturnToDraft}" />
+                          </div>
+                        </aura:set>
+                      </aura:if>
+                      <aura:if isTrue="{!v.taskObject.CDocuSign_Envelope__r.Envelope_Status__c == 'Created'}">
+                        <lightning:button class="solidbuttonDS" label="Send Now" onclick="{!c.handleImmediateSend}" />
+                      </aura:if>
+                    </div>
+                    <aura:set attribute="else">
+                      <div style="float: left; padding-top: 8px; padding-right: 10px;">
+                        <aura:if isTrue="{!v.taskObject.CDocuSign_Envelope__r.Envelope_Status__c == 'Not Created'}">
+                          <lightning:button class="solidbuttonDS" label="Create Draft" onclick="{!c.handleDocuSignCreateDraft}" />
+                        </aura:if>
+                        <aura:if isTrue="{!v.taskObject.CDocuSign_Envelope__r.Envelope_Status__c == 'Created'}">
+                          <lightning:button class="hollowbuttonDS" label="Discard Draft" onclick="{!c.handleDocuSignDiscardDraft}" />
+                        </aura:if>
+                      </div>
+                      <aura:if isTrue="{!v.taskObject.CDocuSign_Envelope__r.Envelope_Status__c == 'Created'}">
+                        <div style="float: left; padding-top: 8px;">
+                          <lightning:button class="hollowbuttonDS" label="Apply Changes" onclick="{!c.handleDocuSignModifyDraft}" />
+                        </div>
+                      </aura:if>
+                      <div style="float: right; padding-top: 8px;">
+                        <lightning:button class="hollowbuttonDS" label="Reload Doc" onclick="{!c.handleReload}" />
+                        <lightning:button class="hollowbuttonDS" label="Close View" onclick="{!c.handleReturnToDraft}" />
+                      </div>
+                    </aura:set>
+                  </aura:if>
+                </aura:set>
+              </aura:if>
+            </lightning:layoutItem>
+          </lightning:layout>
+        </lightning:layoutItem>
+      </lightning:layout>
+    </div>
+  </div>
+</aura:component>

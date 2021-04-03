@@ -1,0 +1,156 @@
+.THIS .mystyle {
+    height: calc(100vh - 123px);
+    overflow: hidden;
+    position: relative;
+}
+
+.THIS .colstyle {
+    overflow-y: auto;
+}
+
+.THIS .rightcol {
+    flex-basis: 555px;
+}
+
+.THIS .maincol {
+    flex: 1;
+}
+
+.THIS .slds-scrollable_x {
+    overflow-y: visible !important;
+    overflow-x: visible !important;
+}
+
+.THIS .slds-scrollable_y {
+    overflow-y: visible !important;
+    overflow-x: visible !important;
+}
+
+.THIS .left-align {
+    text-align: left;
+}
+
+.THIS .right-align {
+    text-align: right;
+}
+
+.THIS .slds-accordion__summary-heading {
+    display: inline-block;
+    width: 100%;
+    padding-left: .5em;
+    /* text-align: left; */
+    background-color: #525659;
+    /* line-height: 2.4em; */
+    border: solid;
+    border-color: black;
+    border-width: .1em;
+    -webkit-text-stroke: thin;
+    color: whitesmoke;
+}
+
+.THIS .x-accordion .x-accordion-group .x-accordion-heading a .x-accordion-toggle {
+    color: whitesmoke !important;
+}
+
+.THIS .slds-accordion__section {
+    background-color: aliceblue;
+    padding-right: 0px;
+    padding-left: 0px;
+    padding-top: 0px;
+    padding-bottom: 5px;
+}
+
+.THIS .slds-accordion__summary-heading>button>span {
+    color: whitesmoke;
+}
+
+.THIS .slds-accordion__summary-heading>button>lightning-primitive-icon {
+    color: whitesmoke
+}
+
+.THIS .break-text-div-Docu {
+    display: inline-block;
+    width: 100%;
+    padding-left: .5em;
+    /* text-align: left; */
+    background-color: #525659;
+    /* line-height: 2.4em; */
+    border: solid;
+    border-color: black;
+    border-width: .1em;
+    -webkit-text-stroke: thin;
+    color: whitesmoke;
+
+}
+
+.THIS .milestone-header-div-Docu {
+    padding-left: 1px;
+    background-color: lightblue;
+    line-height: 2.4em;
+    border: solid;
+    border-width: .1em;
+    -webkit-text-stroke: thin;
+    display: inline-block;
+    border-color: darkgray;
+    color: whitesmoke;
+}
+
+.THIS .spins::after {
+    position: absolute;
+    content: 'Please wait while loading';
+    width: 100%;
+    text-align: center;
+    top: calc(50% + 3em);
+    font-weight: bold;
+}
+
+.THIS .recipientContainer {
+    width: -webkit-fill-available;
+    /* padding: .5em; */
+    /* line-height: 2.4em; */
+    /* border-radius: var(--lwc-borderRadiusMedium, 0.25rem); */
+    /* border: solid; */
+    /* border-width: .1em; */
+    -webkit-text-stroke: thin;
+    display: inline-block;
+    border-color: lightgray;
+    overflow-y: auto;
+}
+
+.THIS .tabContainer {
+    width: -webkit-fill-available;
+    /* padding: .5em; */
+    /* line-height: 2.4em; */
+    /* border-radius: var(--lwc-borderRadiusMedium, 0.25rem); */
+    /* border: solid; */
+    /* border-width: .1em; */
+    -webkit-text-stroke: thin;
+    display: inline-block;
+    border-color: lightgray;
+    overflow-y: auto;
+    height: inherit;
+    position: absolute;
+    /* height: -webkit-fill-available; */
+    /*height: 400px;*/
+}
+
+.THIS .hollowbuttonDS {
+    border-style: solid;
+    height: auto;
+    text-align: center;
+    font-weight: bold;
+    border-color: rgb(241, 96, 94);
+    background: transparent;
+    width: max-content;
+}
+
+
+.THIS .solidbuttonDS {
+    border-style: solid;
+    color: white;
+    height: auto;
+    text-align: center;
+    font-weight: bold;
+    background-color: rgb(241, 96, 94);
+    width: max-content;
+}

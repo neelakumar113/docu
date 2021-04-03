@@ -1,0 +1,25 @@
+<aura:component>
+  <aura:attribute name="yes" type="boolean" default="false" />
+  <aura:attribute name="header" type="string" default="" />
+  <aura:attribute name="message" type="string" default="" />
+  <aura:attribute name="fileName" type="string" default="" />
+  <lightning:overlayLibrary aura:id="overlayLib" />
+
+  <div style="height: 24rem; width: 300px;">
+    <section role="alertdialog" tabindex="-1" aria-labelledby="prompt-heading-id" aria-describedby="prompt-message-wrapper" class="slds-modal slds-fade-in-open slds-modal_prompt" aria-modal="true">
+      <div class="slds-modal__container" style="min-width: 300px; max-width: 300px; text-align-last: center;">
+        <header class="slds-modal__header slds-theme_inverse">
+          <h2 class="slds-text-heading_medium" id="prompt-heading-id">{!v.header}</h2>
+        </header>
+        <div class="slds-modal__content slds-p-around_medium" id="prompt-message-wrapper">
+          <p>{!v.message}</p>
+        </div>
+        <footer class="slds-modal__footer slds-theme_default">
+          <lightning:button class="slds-button slds-button_brand" name="cancel" label="Yes" onclick="{!c.handleYes}" />
+          <lightning:button class="slds-button slds-button_neutral" name="cancel" label="No" onclick="{!c.handleNo}" />
+        </footer>
+      </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+  </div>
+</aura:component>

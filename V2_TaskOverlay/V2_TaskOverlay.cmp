@@ -1,0 +1,504 @@
+<aura:component implements="flexipage:availableForAllPageTypes,force:hasRecordId,force:lightningQuickAction,flexipage:availableForRecordHome" access="global" controller="V2_TasksController">
+  <!-- below statement will allow us to put line breaks in toast message -->
+  <aura:html tag="style"
+    >.toastMessage.forceActionsText{ white-space : pre-line !important; }</aura:html
+  >
+  <aura:attribute name="_caseDetail" type="sObject" />
+  <aura:attribute name="myMap" type="Map" />
+  <aura:attribute name="_trainingMode" type="Boolean" default="false" />
+  <aura:attribute name="_files" type="sObject[]" default="[]" />
+  <aura:attribute name="showSubmitToORS" type="Boolean" default="false" />
+  <aura:attribute name="recordHomeMode" type="Boolean" default="true" />
+  <aura:attribute name="showFollowUp" type="Boolean" default="false" />
+  <aura:attribute name="showAttachment" type="Boolean" default="false" />
+  <aura:attribute name="showMailingAddress" type="Boolean" default="false" />
+  <aura:attribute name="showContact" type="Boolean" default="false" />
+  <aura:attribute name="showRouteDropDown" type="Boolean" default="false" />
+  <aura:attribute name="showChangeORSStatusDropDown" type="Boolean" default="false" />
+  <aura:attribute name="showTaskAutomationMessage" type="Boolean" default="false" />
+  <aura:attribute name="showDocuSign" type="Boolean" default="false" />
+  <aura:attribute name="showDocuSignOverlay" type="Boolean" default="false" />
+  <aura:attribute name="showFileUploader" type="Boolean" default="false" />
+  <aura:attribute name="showFileLister" type="Boolean" default="false" />
+  <aura:attribute name="showEmailLink" type="Boolean" default="false" />
+  <aura:attribute name="showNonContactEntityOption" type="Boolean" default="false" />
+  <aura:attribute name="_milestone" type="string" default="" />
+  <aura:attribute name="_profile" type="sObject" />
+  <aura:attribute name="prefetchFilesByURL" type="sObject[]" />
+  <aura:attribute name="sdFile" type="string" />
+
+  <aura:attribute name="docusignVoidRequested" type="Boolean" default="false" />
+  <aura:attribute name="wcFileUploadMessageCallback" type="Object" access="private" />
+
+  <aura:attribute name="accumulatedPollTime" type="Integer" default="0" />
+
+  <aura:attribute name="showOtherReasonComment" type="Boolean" default="false" />
+  <aura:attribute name="showDispositionLine" type="Boolean" default="false" />
+  <aura:attribute name="showOtherDispositionComment" type="Boolean" default="false" />
+  <aura:attribute name="showPromptToCreateNewTask" type="Boolean" default="false" />
+  <aura:attribute name="followUpTaskMode" type="Boolean" default="false" />
+  <aura:attribute name="taskIDToUpdateForFollowUp" type="String" default="" />
+  <aura:attribute name="integrationTask" type="Integration_Task__c" default="" />
+
+  <aura:attribute name="wcGetFileListMessageReceived" type="Boolean" default="false" />
+  <aura:attribute name="wcGetFileListResponseInError" type="Boolean" default="false" />
+  <aura:attribute name="wcGetFileListMessageResponse" type="Object" default="" />
+
+  <aura:attribute name="wcUploadFilesMessageReceived" type="Boolean" default="false" />
+  <aura:attribute name="wcUploadFilesResponseInError" type="Boolean" default="false" />
+  <aura:attribute name="wcUploadFilesMessageResponse" type="Object" default="" />
+
+  <aura:attribute name="wcInError" type="Boolean" default="false" />
+  <aura:attribute name="wcError" type="Object" default="false" />
+
+  <aura:attribute name="taskDate" type="Date" />
+  <aura:attribute name="taskTime" type="Time" />
+
+  <aura:attribute name="inEditMode" type="Boolean" default="false" />
+  <aura:attribute name="showSpinner" type="Boolean" default="false" />
+  <aura:attribute name="newTaskCreated" type="boolean" default="false" />
+  <aura:attribute name="recordType" type="RecordType" default="" />
+  <aura:attribute name="contactRecordTypes" type="RecordType" default="" />
+  <aura:attribute name="recordTypeDisplayName" type="String" />
+  <aura:attribute name="defaultValues" type="Map" default="{}" />
+  <aura:attribute name="newFileList" type="sObject[]" default="[]" />
+  <aura:attribute name="wcFileList" type="Object" default="[]" />
+  <aura:attribute name="emailMessage" type="sObject" />
+
+  <aura:attribute name="selectedContacts" type="sObject[]" default="[]" />
+  <aura:attribute name="selectedAssignees" type="sObject[]" default="[]" />
+  <aura:attribute name="contacts" type="Contact[]" />
+  <aura:attribute name="originalSelectedContact" type="Contact" />
+  <aura:attribute name="selectedContact" type="Contact" />
+  <aura:attribute name="users" type="User[]" />
+  <aura:attribute name="originalSelectedUser" type="User" />
+  <aura:attribute name="selectedUser" type="User" />
+
+  <aura:attribute name="recordTypes" type="RecordType[]" />
+  <aura:attribute name="externalConfigs" type="External_Configurations__c[]" />
+
+  <aura:attribute name="CaseID" type="Id" />
+  <aura:attribute name="TaskID" type="Id" />
+  <aura:attribute name="casePageRef" type="String" />
+
+  <aura:attribute name="optionsTaskStatus" type="sObject[]" default="[]" />
+  <aura:attribute name="optionsTaskSource" type="List" />
+  <aura:attribute name="optionsTaskAttachment" type="List" />
+  <aura:attribute name="optionsTaskDisposition" type="List" />
+  <aura:attribute name="optionsTaskReason" type="List" />
+  <aura:attribute name="optionsMailingAddress" type="List" />
+  <aura:attribute name="optionsRouteTo" type="List" />
+  <aura:attribute name="optionsORSStatus" type="List" />
+  <aura:attribute name="optionsDocuSignTemplates" type="List" />
+  <aura:attribute name="optionsDocuSignTemplatesV2" type="List" />
+
+  <aura:attribute name="selValuetaskStatus" type="String" />
+  <aura:attribute name="selValueTaskSource" type="String" />
+  <aura:attribute name="selValueTaskAttachment" type="String" />
+  <aura:attribute name="selValueTaskDisposition" type="String" />
+  <aura:attribute name="selValueTaskReason" type="String" />
+  <aura:attribute name="selValueMailingAddress" type="String" />
+  <aura:attribute name="newTaskObject" type="Task" default="{}" />
+  <aura:attribute name="taskObject" type="Task" default="{}" />
+  <aura:attribute name="taskObjectHOLD" type="Task" default="{}" />
+  <aura:attribute name="viewModifyTask" type="boolean" default="false" />
+  <aura:attribute name="pollId" type="string" />
+
+  <aura:handler name="init" value="{!this}" action="{!c.doInit}" />
+  <aura:registerEvent name="taskOverlayChangedEvent" type="c:evtTaskOverlay" />
+  <aura:registerEvent name="newTask" type="c:evtNewTask" />
+  <aura:handler event="c:evtDocuSignAction" action="{!c.handleDocuSignAction}" />
+  <aura:registerEvent name="DateUpdated" type="c:evtInitialProviderDateUpdated" />
+  <aura:registerEvent name="EngDateUpdated" type="c:evtInitialMemberDateUpdated" />
+
+  <lightning:navigation aura:id="navService" />
+  <lightning:overlayLibrary aura:id="overlayLib" />
+
+  <aura:if isTrue="{!v.showSpinner}">
+    <lightning:spinner />
+  </aura:if>
+
+  <!-- the messages component is for error messages -->
+  <lightning:messages />
+
+  <aura:attribute name="iframePageRef" type="String" />
+  <aura:attribute name="width" type="String" />
+  <aura:attribute name="height" type="String" />
+  <aura:attribute name="scrolling" type="String" />
+  <aura:attribute name="frameBorder" type="String" />
+  <aura:attribute name="style" type="String" />
+  <aura:attribute name="sandbox" type="String" />
+  <aura:attribute name="_negotiation" type="sObject" />
+
+  <iframe id="myiFrame" src="{!v.iframePageRef}" style="display: none" />
+  <!-- <iframe aura:id='myiFrame' id = 'myiFrame' src="{!v.iframeUrl}" width="400" height="200" onerror="{!c.blah}"/> -->
+
+  <aura:if isTrue="{!v.showDocuSignOverlay}">
+    <div style="padding: 5px; display: flex; align-items: center; justify-content: center">
+      <div aura:id="divWrapper">
+        <c:V2_DocuSignEnvelopeOverlay selectedUser="{!v.selectedUser}" _caseDetail="{!v._caseDetail}" contacts="{!v.contacts}" contactRecordTypes="{!v.contactRecordTypes}" CaseID="{!v.CaseID}" TaskID="{!v.TaskID}" templateName="{!v.taskObject.DocuSign_Template__c}" aura:id="docuSignOverlay" externalConfigs="{!v.externalConfigs}" taskObject="{!v.taskObject}" sdFile="{!v.sdFile}" />
+      </div>
+    </div>
+  </aura:if>
+  <div class="TaskWrapper" aura:id="TaskWrapper">
+    <!-- <aura:if isTrue="{!!v.showDocuSignOverlay}"> -->
+    <aura:if isTrue="{!v.showPromptToCreateNewTask}">
+      <div style="height: 24rem; width: 300px">
+        <section role="alertdialog" tabindex="-1" aria-labelledby="prompt-heading-id" aria-describedby="prompt-message-wrapper" class="slds-modal slds-fade-in-open slds-modal_prompt" aria-modal="true">
+          <div class="slds-modal__container" style="min-width: 300px; max-width: 300px; text-align-last: center">
+            <header class="slds-modal__header slds-theme_inverse">
+              <h2 class="slds-text-heading_medium" id="prompt-heading-id">Create a Follow Up Task?</h2>
+            </header>
+            <div class="slds-modal__content slds-p-around_medium" id="prompt-message-wrapper">
+              <p>Would you like to create a Follow Up Task for the same Contact?</p>
+            </div>
+            <footer class="slds-modal__footer slds-theme_default">
+              <lightning:button class="slds-button slds-button_brand" name="cancel" label="Yes" onclick="{!c.handleNewTaskYes}" />
+              <lightning:button class="slds-button slds-button_neutral" name="cancel" label="No" onclick="{!c.handleNewTaskNo}" />
+            </footer>
+          </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+      </div>
+    </aura:if>
+    <div style="display: flex; align-items: center; justify-content: center">
+      <div aura:id="divWrapper" style="max-width: 1000px; background-color: white; padding: 5px">
+        <lightning:layout horizontalAlign="spread" verticalAlign="end" multipleRows="false">
+          <lightning:layoutItem flexibility="fixed" size="12">
+            <div style="padding-bottom: 5px">
+              <lightning:layoutItem padding="vertical-small" flexibility="fixed" size="12" class="milestone-header-div">
+                <div style="float: left">
+                  <div class="mySectionheader">
+                    <aura:if isTrue="{!!v.viewModifyTask}"> New Task - {!v.recordTypeDisplayName} </aura:if>
+                    <aura:if isTrue="{!v.viewModifyTask}"> View/Edit Task - {!v.recordTypeDisplayName} </aura:if>
+                  </div>
+                  <aura:if isTrue="{!v.recordHomeMode}">
+                    <a style="padding-left: 10px" href="{!v.casePageRef}">Click to view Case: {!v.taskObject.Case_Number__c} for Patient: {!v.taskObject.Patient_Name__c}</a>
+                  </aura:if>
+                </div>
+                <div>
+                  <hr class="myhr" />
+                </div>
+              </lightning:layoutItem>
+            </div>
+          </lightning:layoutItem>
+        </lightning:layout>
+        <lightning:layout horizontalAlign="spread" multipleRows="false">
+          <lightning:layoutItem padding="vertical-small" flexibility="fixed" size="3" class="slds-p-right_x-small">
+            <lightning:select name="ddTaskSource" label="Task Source" aura:id="Task_Source__c" required="true" messageWhenValueMissing="This is a required field" onblur="{! c.handleBlur }" value="{!v.taskObject.Task_Source__c}">
+              <aura:iteration items="{!v.optionsTaskSource}" var="option">
+                <option text="{!option}" value="{!option}" selected="{!option == v.taskObject.Task_Source__c}" />
+              </aura:iteration>
+            </lightning:select>
+          </lightning:layoutItem>
+          <lightning:layoutItem padding="vertical-small" flexibility="fixed" class="slds-p-right_x-small">
+            <label class="slds-form-element__label" for="Task_Occured_Due_Date__c">
+              <abbr class="slds-required" title="required">*</abbr>
+              <span>Task Occured/Due Date/Time</span>
+            </label>
+            <lightning:input type="datetime" name="Task_Occured_Due_Date__c" variant="label-hidden" label="Task Occured/Due Date" aura:id="Task_Occured_Due_Date__c" required="true" onblur="{! c.handleBlur }" value="{!v.taskObject.Task_Occured_Due_Date__c}" />
+          </lightning:layoutItem>
+
+          <lightning:layoutItem padding="vertical-small" flexibility="fixed" size="2">
+            <lightning:input type="number" label="Duration (minutes)" value="{!v.taskObject.Duration_minutes__c}" onblur="{! c.handleBlur }" aura:id="Duration_minutes__c" fieldName="Duration_minutes__c" />
+          </lightning:layoutItem>
+        </lightning:layout>
+        <aura:if isTrue="{!v.showContact}">
+          <div style="padding-bottom: 5px; padding-top: 5px">
+            <lightning:layoutItem flexibility="fixed" size="12">
+              <div class="mySubSectionheader">Contact Related</div>
+              <div>
+                <hr class="myhr" />
+              </div>
+            </lightning:layoutItem>
+          </div>
+        </aura:if>
+
+        <lightning:layout horizontalAlign="spread" multipleRows="true">
+          <aura:if isTrue="{!v.showContact}">
+            <aura:if isTrue="{!!v.taskObject.Non_Contact_Entity__c}">
+              <lightning:layoutItem padding="vertical-small" flexibility="fixed" size="6" class="slds-p-right_x-small">
+                <lightning:combobox name="contactLookup" label="Contact Name:" aura:id="contactLookup" value="{!v.selectedContact}" onchange="{!c.onChangeContactLookup}" options="{!v.contacts}" />
+                <!-- <aura:iteration items="{!v.contacts}" var="contact">
+              <option text="{!contact.Name + ' - ' + contact.Role__c }" value="{!contact.Id}"
+                selected="{!contact.Id == v.taskObject.WhoId}" />
+            </aura:iteration> -->
+                <!-- </lightning:combobox> -->
+              </lightning:layoutItem>
+            </aura:if>
+
+            <aura:if isTrue="{!v.taskObject.Non_Contact_Entity__c}">
+              <lightning:layoutItem padding="vertical-small" flexibility="fixed" size="6" class="slds-p-right_x-small">
+                <lightning:input name="Non_Contact_Entity_Name__c" label="Non Contact Entity Name" value="{!v.taskObject.Non_Contact_Entity_Name__c}" onblur="{! c.handleBlur }" aura:id="Non_Contact_Entity_Name__c" fieldName="Non_Contact_Entity_Name__c" />
+              </lightning:layoutItem>
+            </aura:if>
+
+            <lightning:layoutItem padding="vertical-small" flexibility="fixed" size="6">
+              <lightning:input type="tel" label="Phone Number" placeholder="XXX-XXX-XXXX" pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}" onblur="{! c.handleBlur }" value="{!v.taskObject.Phone_Number__c}" aura:id="Phone_Number__c" />
+            </lightning:layoutItem>
+
+            <lightning:layoutItem padding="vertical-small" flexibility="fixed" size="6" class="slds-p-right_x-small">
+              <lightning:input type="email" name="email" label="Email Address" value="{!v.taskObject.Email_Address__c}" onblur="{! c.handleBlur }" aura:id="Email_Address__c" fieldName="Contact_E_Mail_Formula__c" />
+            </lightning:layoutItem>
+
+            <aura:if isTrue="{!v.showNonContactEntityOption}">
+              <lightning:layoutItem padding="vertical-small" flexibility="fixed" size="6">
+                <div style="margin-top: 2em">
+                  <lightning:input type="checkbox" label="Non-Contact Entity" aura:id="Non_Contact_Entity__c" name="Non_Contact_Entity__c" checked="{!v.taskObject.Non_Contact_Entity__c}" />
+                </div>
+              </lightning:layoutItem>
+            </aura:if>
+
+            <lightning:layoutItem padding="vertical-small" flexibility="fixed" size="6">
+              <aura:if isTrue="{!v.showMailingAddress}">
+                <lightning:select name="Mailing_Address__c" label="Mailing Address" aura:id="Mailing_Address__c" onblur="{! c.handleBlur }" value="{!v.taskObject.Mailing_Address__c}">
+                  <aura:iteration items="{!v.optionsMailingAddress}" var="option">
+                    <option text="{!option}" value="{!option}" selected="{!option == v.taskObject.Mailing_Address__c}" />
+                  </aura:iteration>
+                </lightning:select>
+              </aura:if>
+            </lightning:layoutItem>
+          </aura:if>
+
+          <lightning:layoutItem flexibility="fixed" size="12">
+            <div style="padding-bottom: 5px; padding-top: 10px">
+              <div class="mySubSectionheader">Task Details</div>
+              <div>
+                <hr class="myhr" />
+              </div>
+            </div>
+          </lightning:layoutItem>
+          <!-- START -->
+
+          <!-- column 1 -->
+          <lightning:layoutItem padding="vertical-small" flexibility="fixed" size="6" class="slds-p-right_x-small">
+            <lightning:layout horizontalAlign="spread" multipleRows="true">
+              <lightning:layoutItem padding="vertical-small" flexibility="fixed" size="12" class="slds-p-right_x-small">
+                <lightning:select required="true" name="Task_Reason__c" label="Task Reason" aura:id="Task_Reason__c" onblur="{! c.handleBlur }" value="{!v.taskObject.Task_Reason__c}" onchange="{!c.handle_Task_Reason__c_onchange}">
+                  <aura:iteration items="{!v.optionsTaskReason}" var="option">
+                    <option text="{!option}" value="{!option}" selected="{!option == v.taskObject.Task_Reason__c}" />
+                  </aura:iteration>
+                </lightning:select>
+              </lightning:layoutItem>
+              <aura:if isTrue="{!v.showDispositionLine}">
+                <!-- column 1 -->
+                <lightning:layoutItem padding="vertical-small" flexibility="fixed" size="12" class="slds-p-right_x-small">
+                  <lightning:select name="Task_Disposition__c" label="Task Outcome" aura:id="Task_Disposition__c" onblur="{! c.handleBlur }" value="{!v.taskObject.Task_Disposition__c}" onchange="{!c.handle_Task_Disposition__c_onchange}">
+                    <aura:iteration items="{!v.optionsTaskDisposition}" var="option">
+                      <option text="{!option}" value="{!option}" selected="{!option == v.taskObject.Task_Disposition__c}" />
+                    </aura:iteration>
+                  </lightning:select>
+                </lightning:layoutItem>
+              </aura:if>
+
+              <aura:if isTrue="{!v.showEmailLink}">
+                <!-- column 1 -->
+                <lightning:layoutItem padding="vertical-small" flexibility="fixed" size="12" class="slds-p-right_x-small slds-p-top_x-small">
+                  <lightning:button name="email" label="View Related Email" onclick="{!c.viewEmail}" />
+                </lightning:layoutItem>
+              </aura:if>
+
+              <aura:if isTrue="{!v.showAttachment}">
+                <!-- column 1 -->
+                <lightning:layoutItem padding="vertical-small" flexibility="fixed" size="12">
+                  <lightning:select name="Task_Attachment__c" label="Task Attachment" aura:id="Task_Attachment__c" onblur="{! c.handleBlur }" value="{!v.taskObject.Task_Attachment__c}">
+                    <aura:iteration items="{!v.optionsTaskAttachment}" var="option">
+                      <option text="{!option}" value="{!option}" selected="{!option == v.taskObject.Task_Attachment__c}" />
+                    </aura:iteration>
+                  </lightning:select>
+                </lightning:layoutItem>
+              </aura:if>
+
+              <aura:if isTrue="{!v.showDocuSign}">
+                <!-- column 1 -->
+                <lightning:layoutItem padding="vertical-small" flexibility="fixed" size="12">
+                  <div style="padding-right: 15px">
+                    <lightning:select required="true" name="DocuSign_Template__c" label="DocuSign Template" aura:id="DocuSign_Template__c" value="{!v.taskObject.DocuSign_Template__c}" disabled="{!v.taskObject.CDocuSign_Envelope__r.Envelope_Status__c != 'Not Created'}">
+                      <aura:iteration items="{!v.optionsDocuSignTemplates}" var="option">
+                        <option text="{!option}" value="{!option}" selected="{!option == v.taskObject.DocuSign_Template__c}" />
+                      </aura:iteration>
+                      <!-- <aura:if isTrue="{! and (empty(v.sdFile), and(!(v.taskObject.CDocuSign_Envelope__r.Envelope_Status__c=='Created'),!(v.taskObject.CDocuSign_Envelope__r.Envelope_Status__c=='Not Created')))}">
+                        <aura:iteration items="{!v.optionsDocuSignTemplates}" var="option">
+                          <option text="{!option}" value="{!option}" selected="{!option == v.taskObject.DocuSign_Template__c}" />
+                        </aura:iteration>
+                        <aura:set attribute="else">
+                          <aura:iteration items="{!v.optionsDocuSignTemplatesV2}" var="option">
+                            <option text="{!option}" value="{!option}" selected="{!option == v.taskObject.DocuSign_Template__c}" />
+                          </aura:iteration>
+                        </aura:set>
+                      </aura:if> -->
+                    </lightning:select>
+                  </div>
+                </lightning:layoutItem>
+              </aura:if>
+            </lightning:layout>
+          </lightning:layoutItem>
+
+          <!-- column 2 -->
+          <lightning:layoutItem padding="vertical-small" flexibility="fixed" size="6" class="slds-p-right_x-small">
+            <lightning:layout horizontalAlign="spread" multipleRows="true">
+              <lightning:layoutItem padding="vertical-small" flexibility="fixed" size="12">
+                <aura:if isTrue="{!v.showOtherReasonComment}">
+                  <lightning:textarea name="Other_Reason_Comment__c" label="Other Reason Comment" aura:id="Other_Reason_Comment__c" onblur="{! c.handleBlur }" value="{!v.taskObject.Other_Reason_Comment__c}" />
+                </aura:if>
+                <aura:if isTrue="{!v.showFileUploader}">
+                  <iframe id="wcFileUploaderIframe" src="{!$Resource.WidgetFileUpload + '/index.html'}" style="display: flex; flex: auto; flex-direction: column; border-style: none; width: 100%" />
+                </aura:if>
+                <aura:if isTrue="{!v.showFileLister}">
+                  <iframe id="wcFileUploaderIframe" src="{!$Resource.WidgetFileLister + '/index.html'}" style="display: flex; flex: auto; flex-direction: column; border-style: none; width: 100%" />
+                </aura:if>
+
+                <aura:if isTrue="{!v.showRouteDropDown}">
+                  <lightning:input label="Route To" aura:id="ORS_Route_To__c" value="{!v.taskObject.V2_ORS_Route_To__c}" />
+                  <!-- <lightning:select required="true" name="ORS_Route_To__c" label="Route To" aura:id="ORS_Route_To__c" value="{!v.taskObject.ORS_Route_To__c}">
+                    <aura:iteration items="{!v.optionsRouteTo}" var="option">
+                      <option text="{!option}" value="{!option}" selected="{!option == v.taskObject.ORS_Route_To__c}" />
+                    </aura:iteration>
+                  </lightning:select> -->
+                </aura:if>
+                <aura:if isTrue="{!v.showChangeORSStatusDropDown}">
+                  <lightning:select required="true" name="ORS_Status__c" label="ORS Status" aura:id="ORS_Status__c" value="{!v.taskObject.ORS_Status__c}">
+                    <aura:iteration items="{!v.optionsORSStatus}" var="option">
+                      <option text="{!option}" value="{!option}" selected="{!option == v.taskObject.ORS_Status__c}" />
+                    </aura:iteration>
+                  </lightning:select>
+                </aura:if>
+              </lightning:layoutItem>
+              <aura:if isTrue="{!v.showDispositionLine}">
+                <lightning:layoutItem padding="vertical-small" flexibility="fixed" size="12">
+                  <aura:if isTrue="{!v.showOtherDispositionComment}">
+                    <lightning:textarea name="Other_Disposition_Comments__c" aura:id="Other_Disposition_Comments__c" label="Other Disposition Comment" onblur="{! c.handleBlur }" value="{!v.taskObject.Other_Disposition_Comments__c}" />
+                  </aura:if>
+                </lightning:layoutItem>
+              </aura:if>
+
+              <aura:if isTrue="{!v.showDocuSign}">
+                <!-- column 2 -->
+                <lightning:layoutItem padding="vertical-small" flexibility="fixed" size="12">
+                  <div></div>
+                </lightning:layoutItem>
+                <lightning:layoutItem padding="vertical-small" flexibility="fixed" size="12">
+                  <div style="float: left; padding-right: 10px">
+                    <lightning:input readonly="true" label="Envelope Status" aura:id="envelopeStatus" value="{!v.taskObject.CDocuSign_Envelope__r.Envelope_Status__c}" />
+                  </div>
+                  <div style="float: left; padding-top: 20px; padding-right: 10px">
+                    <aura:if isTrue="{!v.taskObject.CDocuSign_Envelope__r.Envelope_Status__c=='Not Created'}">
+                      <lightning:button name="btnCreateDraft" label="Create Draft" onclick="{!c.handleDocuSignCreateDraft}" aura:id="btnCreateDraft" />
+                    </aura:if>
+                    <aura:if isTrue="{!v.taskObject.CDocuSign_Envelope__r.Envelope_Status__c=='Created'}">
+                      <lightning:button name="btnReviewModifyDocusign" label="View/Edit" onclick="{!c.handleDocuSignViewModifyDraft}" aura:id="btnReviewModifyDocusign" />
+                    </aura:if>
+                    <aura:if isTrue="{!and(!(v.taskObject.CDocuSign_Envelope__r.Envelope_Status__c=='Created'),!(v.taskObject.CDocuSign_Envelope__r.Envelope_Status__c=='Not Created'))}">
+                      <lightning:button name="btnReviewModifyDocusign" label="View" onclick="{!c.handleDocuSignView}" aura:id="btnViewOnly" />
+                    </aura:if>
+                  </div>
+                  <div style="float: left; padding-top: 20px; padding-right: 10px">
+                    <aura:if isTrue="{!v.taskObject.CDocuSign_Envelope__r.Envelope_Status__c=='Created'}">
+                      <lightning:button name="btnSendDocusign" label="Send" onclick="{!c.handleDocuSignSend}" aura:id="btnSendDocusign" />
+                    </aura:if>
+                    <!-- <aura:if isTrue="{!and((v.taskObject.CDocuSign_Envelope__r.Ready_to_Send__c=='TRUE'),(v.taskObject.CDocuSign_Envelope__r.Envelope_Status__c=='Created'))}"> -->
+                    <aura:if isTrue="{! or((or(v.taskObject.CDocuSign_Envelope__r.Envelope_Status__c=='Delivered',v.taskObject.CDocuSign_Envelope__r.Envelope_Status__c=='Signed')),v.taskObject.CDocuSign_Envelope__r.Envelope_Status__c=='Sent')	 }">
+                      <lightning:button name="btnVoidDocusign" label="Void" onclick="{!c.handleDocuSignVoid}" aura:id="btnVoidDocusign" />
+                    </aura:if>
+                  </div>
+                </lightning:layoutItem>
+              </aura:if>
+            </lightning:layout>
+          </lightning:layoutItem>
+
+          <!-- END HERE -->
+          <lightning:layoutItem flexibility="fixed" size="12">
+            <div style="padding-bottom: 5px; padding-top: 10px">
+              <div class="mySubSectionheader">Task Owner and Status</div>
+              <div>
+                <hr class="myhr" />
+              </div>
+            </div>
+          </lightning:layoutItem>
+        </lightning:layout>
+
+        <lightning:layout horizontalAlign="spread" verticalAlign="end" multipleRows="true">
+          <lightning:layoutItem padding="vertical-small" flexibility="fixed" size="6" class="slds-p-right_xx-small">
+            <lightning:combobox name="userLookup" label="Assigned to Name:" aura:id="userLookup" onblur="{! c.handleBlur }" required="true" value="{!v.selectedUser}" options="{!v.users}" />
+            <!-- <aura:iteration items="{!v.users}" var="user">
+            <option text="{!user.Name}" value="{!user.Id}" selected="{!user.Id == v.taskObject.OwnerId}" />
+          </aura:iteration>
+        </lightning:select> -->
+          </lightning:layoutItem>
+
+          <lightning:layoutItem padding="vertical-small" flexibility="fixed" size="6">
+            <lightning:combobox name="ddStatus" label="Task Status:" aura:id="ddStatus" value="{!v.taskObject.Status}" onchange="{! c.handle_Status_onchange }" required="true" options="{!v.optionsTaskStatus}" />
+            <!-- <aura:iteration items="{!v.optionsTaskStatus}" var="option">
+            <option text="{!option}" value="{!option}" selected="{!option == v.taskObject.Status}" />
+          </aura:iteration>
+        </lightning:select> -->
+          </lightning:layoutItem>
+
+          <aura:if isTrue="{!v.showFollowUp}">
+            <lightning:layoutItem padding="vertical-small" flexibility="fixed" size="6" class="slds-p-right_x-small">
+              <lightning:input type="datetime" name="Follow_Up_Reminder_Date__c" aura:id="Follow_Up_Reminder_Date__c" label="Follow Up/Reminder Date" onblur="{! c.handleBlur }" value="{!v.taskObject.Follow_Up_Reminder_Date__c}" onchange="{!c.followUpDateChange}" />
+            </lightning:layoutItem>
+
+            <lightning:layoutItem padding="vertical-small" flexibility="fixed" size="6">
+              <lightning:textarea name="Follow_Up_Comments__c" aura:id="Follow_Up_Comments__c" label="Follow Up Comments" value="{!v.taskObject.Follow_Up_Comments__c}" onblur="{! c.handleBlur }" />
+            </lightning:layoutItem>
+          </aura:if>
+        </lightning:layout>
+
+        <lightning:layout horizontalAlign="spread" multipleRows="true">
+          <lightning:layoutItem flexibility="fixed" size="12">
+            <div style="padding-bottom: 5px; padding-top: 10px">
+              <div class="mySubSectionheader">Task Comments</div>
+              <div>
+                <hr class="myhr" />
+              </div>
+            </div>
+          </lightning:layoutItem>
+
+          <lightning:layoutItem padding="vertical-small" flexibility="fixed" size="12">
+            <lightning:textarea name="taskComments" aura:id="Task_Comments__c" label="Task Comments" value="{!v.taskObject.Description}" onblur="{! c.handleBlur }" />
+          </lightning:layoutItem>
+
+          <aura:if isTrue="{!v.showTaskAutomationMessage}">
+            <lightning:layoutItem flexibility="fixed" size="12">
+              <div style="padding-bottom: 5px; padding-top: 10px">
+                <div class="mySubSectionheader">Additional Information From Automated Completion of Task</div>
+                <div>
+                  <hr class="myhr" />
+                </div>
+              </div>
+            </lightning:layoutItem>
+            <lightning:layoutItem padding="vertical-small" flexibility="fixed" size="12">
+              <lightning:textarea disabled="true" name="Task_Automation_Message__c" aura:id="Task_Automation_Message__c" variant="label-hidden" value="{!v.integrationTask.Message__c}" />
+            </lightning:layoutItem>
+          </aura:if>
+        </lightning:layout>
+        <div style="margin-top: 1em">
+          <aura:if isTrue="{!v.inEditMode}">
+            <div style="float: right">
+              <lightning:button class="hollowbutton" name="cancel" label="Cancel" onclick="{!c.handleCancel}" />
+              <lightning:button class="solidbutton" variant="brand" name="save" label="Save" onclick="{!c.handleSubmit}" />
+            </div>
+          </aura:if>
+          <aura:if isTrue="{!!v.inEditMode}">
+            <div style="float: left">
+              <aura:if isTrue="{!and(v.taskObject.CDocuSign_Envelope__r.Envelope_Status__c=='Not Created', v.showDocuSign )}">
+                <aura:if isTrue="{!v.taskObject.Status=='Pending'}">
+                  <lightning:button class="solidbuttondynamicwidth" name="Cancel Task" label="Cancel Task" onclick="{!c.handleCancelTask}" />
+                </aura:if>
+              </aura:if>
+            </div>
+            <div style="float: right">
+              <lightning:button class="hollowbutton" name="cancel" label="Close" onclick="{!c.handleClose}" />
+              <lightning:button class="solidbutton" name="edit" label="Edit" onclick="{!c.handleEdit}" />
+            </div>
+            <aura:if isTrue="{!v.showSubmitToORS}">
+              <lightning:button class="solidbuttondynamicwidth" name="submittoors" label="Submit To ORS" onclick="{!c.handleSubmitToORS}" />
+            </aura:if>
+          </aura:if>
+        </div>
+      </div>
+    </div>
+    <!-- </aura:if> -->
+  </div>
+</aura:component>
